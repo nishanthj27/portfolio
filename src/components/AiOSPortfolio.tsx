@@ -2,9 +2,31 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, SVGProps, useEffect, useRef, useState, useTransition } from "react";
-import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Download, MessageCircle, Mic, Send, Sparkles } from "lucide-react";
+import {
+  FormEvent,
+  SVGProps,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import {
+  AnimatePresence,
+  motion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from "framer-motion";
+import {
+  Download,
+  ExternalLink,
+  GraduationCap,
+  MessageCircle,
+  Mic,
+  Send,
+  Sparkles,
+  X,
+} from "lucide-react";
 import {
   AssistantMessage,
   AssistantStatus,
@@ -14,20 +36,10 @@ import {
   localReply,
 } from "@/lib/assistant";
 
-type SpeechRecognitionResultItem = {
-  transcript: string;
-};
-
-type SpeechRecognitionResult = {
-  0: SpeechRecognitionResultItem;
-};
-
-type SpeechRecognitionEvent = {
-  results: {
-    0: SpeechRecognitionResult;
-  };
-};
-
+// ─── Speech types ────────────────────────────────────────────────────────────
+type SpeechRecognitionResultItem = { transcript: string };
+type SpeechRecognitionResult = { 0: SpeechRecognitionResultItem };
+type SpeechRecognitionEvent = { results: { 0: SpeechRecognitionResult } };
 type SpeechRecognitionInstance = {
   continuous: boolean;
   interimResults: boolean;
@@ -37,19 +49,15 @@ type SpeechRecognitionInstance = {
   onerror: () => void;
   start: () => void;
 };
-
 type BrowserWithSpeech = Window &
   typeof globalThis & {
     SpeechRecognition?: new () => SpeechRecognitionInstance;
     webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
   };
 
-type ContactFormState = {
-  name: string;
-  email: string;
-  message: string;
-};
+type ContactFormState = { name: string; email: string; message: string };
 
+// ─── Icons ───────────────────────────────────────────────────────────────────
 function GithubIcon({ className, ...props }: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor" {...props}>
@@ -66,9 +74,11 @@ function LinkedinIcon({ className, ...props }: SVGProps<SVGSVGElement>) {
   );
 }
 
-const navItems = [
+// ─── Constants ───────────────────────────────────────────────────────────────
+const navItems: [string, string][] = [
   ["assistant", "Assistant"],
   ["about", "About"],
+  ["education", "Education"],
   ["skills", "Skills"],
   ["projects", "Projects"],
   ["experience", "Timeline"],
@@ -78,11 +88,11 @@ const navItems = [
 
 const suggestedPrompts = [
   "Tell me about Nishanth",
-  "Show AI projects",
   "Explain Herbica AI",
-  "What technologies does he know?",
-  "Show research work",
-  "Go to contact",
+  "What's his education?",
+  "Show skills",
+  "IEEE paper details",
+  "How to contact?",
 ];
 
 const statusLabel: Record<AssistantStatus, string> = {
@@ -92,28 +102,32 @@ const statusLabel: Record<AssistantStatus, string> = {
   speaking: "Speaking",
 };
 
+const providerBadge: Record<string, { label: string; color: string }> = {
+  groq: { label: "Groq", color: "text-cyan-200 border-cyan-200/30 bg-cyan-200/10" },
+  static: { label: "Local", color: "text-lime-200 border-lime-200/30 bg-lime-200/10" },
+};
+
 function uid() {
   return Math.random().toString(36).slice(2);
 }
 
 function scrollToSection(section: string) {
-  const target = document.getElementById(section);
-  target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderRichText(content: string) {
-  return content.split("\n").map((line, lineIndex) => {
-    if (!line.trim()) return <div key={`space-${lineIndex}`} className="h-2" />;
+  return content.split("\n").map((line, li) => {
+    if (!line.trim()) return <div key={`s-${li}`} className="h-2" />;
     const parts = line.split(/(\*\*[^*]+\*\*)/g);
     return (
-      <p key={`${line}-${lineIndex}`} className="mb-1.5 leading-relaxed">
-        {parts.map((part, partIndex) =>
+      <p key={`l-${li}`} className="mb-1.5 leading-relaxed">
+        {parts.map((part, pi) =>
           part.startsWith("**") && part.endsWith("**") ? (
-            <strong key={`${part}-${partIndex}`} className="font-semibold text-cyan-200">
+            <strong key={`p-${pi}`} className="font-semibold text-cyan-200">
               {part.slice(2, -2)}
             </strong>
           ) : (
-            <span key={`${part}-${partIndex}`}>{part}</span>
+            <span key={`s-${pi}`}>{part}</span>
           ),
         )}
       </p>
@@ -121,6 +135,7 @@ function renderRichText(content: string) {
   });
 }
 
+// ─── Shared UI ───────────────────────────────────────────────────────────────
 function SectionHeader({ eyebrow, title, body }: { eyebrow: string; title: string; body?: string }) {
   return (
     <div className="mb-10 max-w-3xl">
@@ -131,69 +146,19 @@ function SectionHeader({ eyebrow, title, body }: { eyebrow: string; title: strin
   );
 }
 
-function PrimaryButton({
-  children,
-  onClick,
-  href,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  href?: string;
-}) {
-  const className =
-    "group inline-flex items-center justify-center rounded-full border border-cyan-300/40 bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_38px_rgba(0,231,255,0.28)] transition hover:-translate-y-0.5 hover:bg-white";
-
-  if (href) {
-    return (
-      <Link href={href} className={className}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <button className={className} onClick={onClick} type="button">
-      {children}
-    </button>
-  );
+function PrimaryButton({ children, onClick, href }: { children: React.ReactNode; onClick?: () => void; href?: string }) {
+  const cls = "group inline-flex items-center gap-2 justify-center rounded-full border border-cyan-300/40 bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_0_38px_rgba(0,231,255,0.28)] transition hover:-translate-y-0.5 hover:bg-white";
+  if (href) return <Link href={href} className={cls}>{children}</Link>;
+  return <button className={cls} onClick={onClick} type="button">{children}</button>;
 }
 
-function GhostButton({
-  children,
-  onClick,
-  href,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  href?: string;
-}) {
-  const className =
-    "inline-flex items-center justify-center rounded-full border border-white/12 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-100 transition hover:-translate-y-0.5 hover:border-cyan-200/40 hover:bg-cyan-200/10";
-
-  if (href) {
-    return (
-      <Link href={href} className={className}>
-        {children}
-      </Link>
-    );
-  }
-
-  return (
-    <button className={className} onClick={onClick} type="button">
-      {children}
-    </button>
-  );
+function GhostButton({ children, onClick, href }: { children: React.ReactNode; onClick?: () => void; href?: string }) {
+  const cls = "inline-flex items-center gap-2 justify-center rounded-full border border-white/12 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-100 transition hover:-translate-y-0.5 hover:border-cyan-200/40 hover:bg-cyan-200/10";
+  if (href) return <Link href={href} className={cls}>{children}</Link>;
+  return <button className={cls} onClick={onClick} type="button">{children}</button>;
 }
 
-function IconLink({
-  href,
-  label,
-  children,
-}: {
-  href: string;
-  label: string;
-  children: React.ReactNode;
-}) {
+function IconLink({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
   return (
     <a
       href={href}
@@ -208,6 +173,19 @@ function IconLink({
   );
 }
 
+// ─── Scroll Progress Bar ─────────────────────────────────────────────────────
+function ScrollProgressBar() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  return (
+    <motion.div
+      style={{ scaleX }}
+      className="fixed left-0 right-0 top-0 z-[100] h-[2px] origin-left bg-gradient-to-r from-cyan-300 via-violet-300 to-cyan-300"
+    />
+  );
+}
+
+// ─── Assistant Orb ───────────────────────────────────────────────────────────
 function AssistantOrb({ status, onClick }: { status: AssistantStatus; onClick: () => void }) {
   return (
     <button
@@ -220,13 +198,14 @@ function AssistantOrb({ status, onClick }: { status: AssistantStatus; onClick: (
       <span className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.32),rgba(0,231,255,0.2)_30%,rgba(5,12,27,0.95)_70%)] font-mono text-xs font-bold text-cyan-100">
         ARIA
       </span>
-      <span className="absolute -left-8 top-1/2 hidden -translate-y-1/2 rounded-full border border-white/10 bg-slate-950/80 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-slate-300 md:block">
+      <span className="absolute -right-5.5 top-0 hidden rounded-full border border-white/10 bg-slate-950/80 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.22em] text-slate-300 md:block">
         {statusLabel[status]}
       </span>
     </button>
   );
 }
 
+// ─── Listening Orb ───────────────────────────────────────────────────────────
 function ListeningMicOrb({ visible }: { visible: boolean }) {
   return (
     <AnimatePresence>
@@ -248,11 +227,7 @@ function ListeningMicOrb({ visible }: { visible: boolean }) {
               <div className="font-mono text-xs uppercase tracking-[0.22em] text-lime-200">Listening</div>
               <div className="mt-2 flex h-7 items-end gap-1.5">
                 {[0, 1, 2, 3, 4].map((bar) => (
-                  <span
-                    key={bar}
-                    className="w-1.5 rounded-full bg-lime-200"
-                    style={{ animation: `waveform ${0.75 + bar * 0.08}s ease-in-out infinite` }}
-                  />
+                  <span key={bar} className="w-1.5 rounded-full bg-lime-200" style={{ animation: `waveform ${0.75 + bar * 0.08}s ease-in-out infinite` }} />
                 ))}
               </div>
             </div>
@@ -263,6 +238,53 @@ function ListeningMicOrb({ visible }: { visible: boolean }) {
   );
 }
 
+// ─── Mobile Nav ──────────────────────────────────────────────────────────────
+function MobileNavOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+  useEffect(() => {
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  return (
+    <AnimatePresence>
+      {open ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[45] flex flex-col bg-slate-950/96 px-6 pt-24 pb-10 backdrop-blur-2xl lg:hidden"
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <nav className="flex flex-col gap-2">
+            {navItems.map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => { scrollToSection(id); onClose(); }}
+                className="rounded-2xl px-5 py-4 text-left text-2xl font-semibold text-white transition hover:bg-white/[0.06] hover:text-cyan-200"
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+          <div className="mt-auto flex gap-3 pt-8">
+            <span className="h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_12px_rgba(168,255,96,0.8)]" />
+            <span className="font-mono text-xs uppercase tracking-[0.22em] text-slate-400">AI system online</span>
+          </div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
+
+// ─── Assistant Console ───────────────────────────────────────────────────────
 function AssistantConsole({
   data,
   status,
@@ -272,73 +294,73 @@ function AssistantConsole({
 }: {
   data: PortfolioData;
   status: AssistantStatus;
-  setStatus: (status: AssistantStatus) => void;
+  setStatus: (s: AssistantStatus) => void;
   expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
+  setExpanded: (e: boolean) => void;
 }) {
   const [messages, setMessages] = useState<AssistantMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      content:
-        "ARIA online. I can navigate this portfolio, explain projects, summarize Nishanth's skills, or switch into voice mode. Try: **Explain Herbica AI**.",
-    },
-  ]);
+  {
+    id: "welcome",
+    role: "assistant",
+    content:
+      "ARIA online. I'm Nishanth's AI copilot.\n\n**What I can do:**\n• Explain his **IEEE research** on plant identification\n• Deep dive into **AI projects** (Herbica, Interview Agent, TN Kalvi Hub)\n• Summarize **skills**, **education**, and **experience**\n• Help you reach Nishanth via email or LinkedIn\n• Answer questions in voice mode\n\n**Quick starts:** Tell me about his research | Explain Herbica AI | What's his education? | How to contact?",
+    provider: "static",
+  },
+]);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const cacheRef = useRef(new Map<string, string>());
   const cooldownRef = useRef(false);
 
+  // Build conversation history for context-aware requests
+  function buildHistory() {
+    return messages
+      .filter((m) => m.id !== "welcome")
+      .slice(-8)
+      .map((m) => ({ role: m.role, content: m.content }));
+  }
+
   useEffect(() => {
-    const chatContainer = chatScrollRef.current;
-    if (!chatContainer) return;
-    chatContainer.scrollTo({
-      top: chatContainer.scrollHeight,
-      behavior: messages.length > 1 ? "smooth" : "auto",
-    });
+    const el = chatScrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: messages.length > 1 ? "smooth" : "auto" });
   }, [messages, isThinking]);
 
   function speak(text: string) {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text.replace(/\*\*/g, ""));
-    utterance.rate = 0.98;
-    utterance.pitch = 1;
-    utterance.onstart = () => setStatus("speaking");
-    utterance.onend = () => setStatus("idle");
-    utterance.onerror = () => setStatus("idle");
-    window.speechSynthesis.speak(utterance);
+    const utt = new SpeechSynthesisUtterance(text.replace(/\*\*/g, "").slice(0, 300));
+    utt.rate = 0.98;
+    utt.onstart = () => setStatus("speaking");
+    utt.onend = () => setStatus("idle");
+    utt.onerror = () => setStatus("idle");
+    window.speechSynthesis.speak(utt);
   }
 
-  async function resolvePrompt(prompt: string) {
-    const normalized = prompt.trim();
-    const navigation = findNavigationAction(normalized);
+  async function resolvePrompt(prompt: string): Promise<{ text: string; provider?: string }> {
+    const nav = findNavigationAction(prompt);
+    if (nav) { scrollToSection(nav.section); return { text: nav.label, provider: "static" }; }
 
-    if (navigation) {
-      scrollToSection(navigation.section);
-      return navigation.label;
-    }
+    const local = localReply(prompt);
+    if (local) return { text: local, provider: "static" };
 
-    const local = localReply(normalized);
-    if (local) return local;
+    const cacheKey = prompt.toLowerCase().slice(0, 120);
+    const cached = cacheRef.current.get(cacheKey);
+    if (cached) return { text: cached, provider: "static" };
 
-    const cached = cacheRef.current.get(normalized.toLowerCase());
-    if (cached) return cached;
-
-    const response = await fetch("/api/assistant", {
+    const res = await fetch("/api/assistant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: normalized }),
+      body: JSON.stringify({ prompt, history: buildHistory() }),
     });
-    const result = (await response.json()) as { text?: string };
+    const result = (await res.json()) as { text?: string; provider?: string };
     const text =
       result.text ||
-      "I could not reach the enhancement layer, but the local knowledge base is still available. Ask about projects, skills, research, or contact.";
+      "I couldn't reach the AI layer — but local knowledge is still available. Ask about projects, skills, or education.";
 
-    cacheRef.current.set(normalized.toLowerCase(), text);
-    return text;
+    cacheRef.current.set(cacheKey, text);
+    return { text, provider: result.provider };
   }
 
   function submitPrompt(rawPrompt: string) {
@@ -346,67 +368,53 @@ function AssistantConsole({
     if (!prompt) return;
 
     if (cooldownRef.current) {
-      setMessages((current) => [
-        ...current,
-        { id: uid(), role: "assistant", content: "Cooldown active for a moment. ARIA is keeping the system responsive." },
-      ]);
+      setMessages((cur) => [...cur, { id: uid(), role: "assistant", content: "Cooldown active — just a moment." }]);
       return;
     }
-
     cooldownRef.current = true;
-    window.setTimeout(() => {
-      cooldownRef.current = false;
-    }, 900);
+    setTimeout(() => { cooldownRef.current = false; }, 900);
+
     setInput("");
-    setMessages((current) => [...current, { id: uid(), role: "user", content: prompt }]);
+    setMessages((cur) => [...cur, { id: uid(), role: "user", content: prompt }]);
     setStatus("thinking");
     setIsThinking(true);
 
     void (async () => {
-      const answer = await resolvePrompt(prompt).catch(
-        () => "The enhancement layer is unreachable, but the local portfolio OS is still online. Ask me about projects, skills, research, or contact details.",
-      );
-      setMessages((current) => [...current, { id: uid(), role: "assistant", content: answer }]);
+      const { text, provider } = await resolvePrompt(prompt).catch(() => ({
+        text: "The AI layer is unreachable — local portfolio OS is still online. Ask about projects, skills, education, or contact details.",
+        provider: "static",
+      }));
+      setMessages((cur) => [
+        ...cur,
+        { id: uid(), role: "assistant", content: text, provider: provider as "groq" | "static" | undefined },
+      ]);
       setIsThinking(false);
       setStatus("idle");
-      speak(answer);
+      speak(text);
     })();
   }
 
   function startVoice() {
-    const speechWindow = window as BrowserWithSpeech;
-    const Recognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
+    const w = window as BrowserWithSpeech;
+    const Recognition = w.SpeechRecognition || w.webkitSpeechRecognition;
     if (!Recognition) {
-      setMessages((current) => [
-        ...current,
-        {
-          id: uid(),
-          role: "assistant",
-          content: "Voice input is not supported in this browser. Text mode is fully online.",
-        },
-      ]);
+      setMessages((cur) => [...cur, { id: uid(), role: "assistant", content: "Voice input isn't supported in this browser. Text mode is fully online." }]);
       return;
     }
-
-    const recognition = new Recognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-    let capturedSpeech = false;
-    recognition.onresult = (event) => {
-      capturedSpeech = true;
-      submitPrompt(event.results[0][0].transcript);
-    };
-    recognition.onend = () => {
-      if (!capturedSpeech) setStatus("idle");
-    };
-    recognition.onerror = () => setStatus("idle");
+    const rec = new Recognition();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = "en-US";
+    let captured = false;
+    rec.onresult = (e) => { captured = true; submitPrompt(e.results[0][0].transcript); };
+    rec.onend = () => { if (!captured) setStatus("idle"); };
+    rec.onerror = () => setStatus("idle");
     setStatus("listening");
-    recognition.start();
+    rec.start();
   }
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     submitPrompt(input);
   }
 
@@ -415,10 +423,10 @@ function AssistantConsole({
       <SectionHeader
         eyebrow="ARIA.ASSISTANT"
         title="A portfolio you can interrogate."
-        body="The assistant uses local intent matching first, instant navigation actions second, and only calls the AI enhancement layer when a question needs more reasoning."
+        body="Hybrid AI with local intent routing, agentic navigation, and Llama 3.1 powered reasoning."
       />
-
       <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+        {/* Left: Architecture panel */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -434,27 +442,28 @@ function AssistantConsole({
           </div>
           <div className="mt-8 grid gap-3">
             {[
-              ["Local knowledge", "Structured JSON powers fast portfolio answers without API calls."],
-              ["Navigation actions", "Commands like 'open projects' scroll instantly inside the OS."],
-              ["AI enhancement", "Groq handles open-ended questions, OpenRouter acts as fallback."],
-              ["Protection layer", "Cooldowns, in-memory caching, and server rate limits reduce abuse."],
-              ["Voice layer", "Web Speech API captures input; SpeechSynthesis reads answers back."],
-            ].map(([title, body], index) => (
+              ["Local knowledge", "Structured JSON powers instant portfolio answers — zero API calls, zero latency."],
+              ["Navigation actions", "Commands like 'open projects' or 'go to contact' scroll instantly inside the OS."],
+              ["Groq AI", "Llama 3.1 via Groq handles open-ended questions with fast inference."],
+              ["Graceful fallback", "If Groq is unavailable, the local knowledge layer keeps ARIA fully online."],
+              ["Voice layer", "Web Speech API captures voice input; SpeechSynthesis reads answers back aloud."],
+            ].map(([title, body], i) => (
               <motion.div
                 key={title}
                 initial={{ opacity: 0, x: -16 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: i * 0.05 }}
                 viewport={{ once: true }}
                 className="rounded-2xl border border-white/10 bg-white/[0.035] p-4"
               >
-                <div className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-200">0{index + 1} / {title}</div>
+                <div className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-200">0{i + 1} / {title}</div>
                 <p className="mt-2 text-sm leading-6 text-slate-300">{body}</p>
               </motion.div>
             ))}
           </div>
         </motion.div>
 
+        {/* Right: Chat panel */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -480,40 +489,40 @@ function AssistantConsole({
             </button>
           </div>
 
-          <div ref={chatScrollRef} className="h-[440px] overflow-y-auto px-2 py-5">
+          <div ref={chatScrollRef} className="h-[420px] overflow-y-auto px-2 py-5">
             <div className="space-y-4">
-              {messages.map((message) => (
+              {messages.map((msg) => (
                 <motion.div
-                  key={message.id}
+                  key={msg.id}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
                 >
                   <div
-                    className={`max-w-[86%] rounded-3xl px-4 py-3 text-sm ${
-                      message.role === "user"
+                    className={`max-w-[88%] rounded-3xl px-4 py-3 text-sm ${
+                      msg.role === "user"
                         ? "bg-cyan-300 text-slate-950"
                         : "border border-white/10 bg-white/[0.045] text-slate-200"
                     }`}
                   >
-                    {renderRichText(message.content)}
+                    {renderRichText(msg.content)}
                   </div>
+                  {msg.role === "assistant" && msg.provider && msg.provider !== undefined && (
+                    <span className={`mt-1 ml-1 rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] ${providerBadge[msg.provider]?.color ?? ""}`}>
+                      {providerBadge[msg.provider]?.label ?? msg.provider}
+                    </span>
+                  )}
                 </motion.div>
               ))}
               {isThinking ? (
                 <div className="flex justify-start">
                   <div className="flex items-center gap-2 rounded-3xl border border-white/10 bg-white/[0.045] px-4 py-3">
-                    {[0, 1, 2].map((item) => (
-                      <span
-                        key={item}
-                        className="h-2 w-2 rounded-full bg-cyan-200"
-                        style={{ animation: `pulse ${0.9 + item * 0.2}s ease-in-out infinite` }}
-                      />
+                    {[0, 1, 2].map((i) => (
+                      <span key={i} className="h-2 w-2 rounded-full bg-cyan-200" style={{ animation: `pulse ${0.9 + i * 0.2}s ease-in-out infinite` }} />
                     ))}
                   </div>
                 </div>
               ) : null}
-              <div ref={bottomRef} />
             </div>
           </div>
 
@@ -533,8 +542,8 @@ function AssistantConsole({
           <form onSubmit={onSubmit} className="flex gap-2 px-2 pb-2">
             <input
               value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder={`Ask about ${data.projects[0].title}, skills, research, or contact...`}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={`Ask about ${data.projects[0].title}, education, skills...`}
               className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-200/50"
             />
             <button
@@ -547,11 +556,11 @@ function AssistantConsole({
               }`}
             >
               <Mic className="h-4 w-4" aria-hidden="true" />
-              {status === "listening" ? "Listening" : "Voice"}
+              <span className="hidden sm:inline">{status === "listening" ? "Listening" : "Voice"}</span>
             </button>
             <button type="submit" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-cyan-300 px-5 text-sm font-semibold text-slate-950 transition hover:bg-white">
               <Send className="h-4 w-4" aria-hidden="true" />
-              Send
+              <span className="hidden sm:inline">Send</span>
             </button>
           </form>
         </motion.div>
@@ -560,6 +569,7 @@ function AssistantConsole({
   );
 }
 
+// ─── Hero ────────────────────────────────────────────────────────────────────
 function Hero({ data, openAssistant }: { data: PortfolioData; openAssistant: () => void }) {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 900], [0, 220]);
@@ -573,7 +583,7 @@ function Hero({ data, openAssistant }: { data: PortfolioData; openAssistant: () 
         <div>
           <div className="inline-flex items-center gap-3 rounded-full border border-cyan-200/20 bg-cyan-200/[0.06] px-4 py-2 font-mono text-xs uppercase tracking-[0.24em] text-cyan-100">
             <span className="h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_16px_rgba(168,255,96,0.8)]" />
-            AI system online
+            Open to Work · AI Engineer
           </div>
           <h1 className="mt-8 max-w-5xl text-5xl font-semibold tracking-normal text-white md:text-7xl lg:text-8xl">
             {data.name}
@@ -604,11 +614,18 @@ function Hero({ data, openAssistant }: { data: PortfolioData; openAssistant: () 
             </IconLink>
           </div>
           <div className="mt-10 grid max-w-3xl grid-cols-2 gap-3 md:grid-cols-4">
-            {data.stats.map((stat) => (
-              <div key={stat.label} className="rounded-3xl border border-white/10 bg-white/[0.035] p-4">
+            {data.stats.map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + i * 0.08 }}
+                className="rounded-3xl border border-white/10 bg-white/[0.035] p-4"
+              >
                 <div className="font-mono text-2xl font-semibold text-cyan-200">{stat.value}</div>
                 <div className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{stat.label}</div>
-              </div>
+                <div className="mt-1 text-xs text-slate-500">{stat.detail}</div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -641,12 +658,12 @@ function Hero({ data, openAssistant }: { data: PortfolioData; openAssistant: () 
             </div>
           </div>
           <div className="glass-panel absolute bottom-8 left-0 rounded-3xl p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">Command</div>
-            <div className="mt-2 text-sm text-cyan-100">&quot;Show AI projects&quot;</div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">IEEE</div>
+            <div className="mt-2 text-sm text-cyan-100">Published Research</div>
           </div>
           <div className="glass-panel absolute right-0 top-10 rounded-3xl p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">Latency</div>
-            <div className="mt-2 text-sm text-lime-200">Local-first</div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">Available</div>
+            <div className="mt-2 text-sm text-lime-200">Open to Work</div>
           </div>
         </div>
       </div>
@@ -654,6 +671,7 @@ function Hero({ data, openAssistant }: { data: PortfolioData; openAssistant: () 
   );
 }
 
+// ─── About ───────────────────────────────────────────────────────────────────
 function AboutSection({ data }: { data: PortfolioData }) {
   return (
     <section id="about" className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
@@ -665,19 +683,19 @@ function AboutSection({ data }: { data: PortfolioData }) {
       <div className="grid gap-4 md:grid-cols-2">
         {[
           ["Mission", data.about.mission],
-          ["Research Interests", data.about.researchInterests.join(" | ")],
+          ["Research Interests", data.about.researchInterests.join(" · ")],
           ["Builder Mindset", data.about.mindset],
           ["Availability", data.availability],
-        ].map(([title, body], index) => (
+        ].map(([title, body], i) => (
           <motion.div
             key={title}
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.06 }}
+            transition={{ delay: i * 0.06 }}
             viewport={{ once: true }}
             className="glass-panel rounded-[2rem] p-6"
           >
-            <div className="font-mono text-xs uppercase tracking-[0.26em] text-cyan-200">0{index + 1} / {title}</div>
+            <div className="font-mono text-xs uppercase tracking-[0.26em] text-cyan-200">0{i + 1} / {title}</div>
             <p className="mt-4 leading-8 text-slate-300">{body}</p>
           </motion.div>
         ))}
@@ -686,6 +704,89 @@ function AboutSection({ data }: { data: PortfolioData }) {
   );
 }
 
+// ─── Education ───────────────────────────────────────────────────────────────
+function EducationSection({ data }: { data: PortfolioData }) {
+  const edu = data.education;
+  return (
+    <section id="education" className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+      <SectionHeader
+        eyebrow="SYSTEM.EDUCATION"
+        title="Academic foundation."
+        body="Formal training in AI and Data Science combined with research, competitions, and real-world product engineering."
+      />
+      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+        {/* Main degree card */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="glass-panel overflow-hidden rounded-[2rem] p-6"
+        >
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/20 bg-cyan-200/[0.08] text-cyan-200">
+              <GraduationCap className="h-7 w-7" />
+            </div>
+            <div className="min-w-0">
+              <div className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-200">Undergraduate Degree</div>
+              <h3 className="mt-2 text-2xl font-semibold leading-snug text-white">{edu.degree}</h3>
+              <p className="mt-1 text-cyan-100/80">{edu.institution}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 font-mono text-xs text-slate-300">{edu.duration}</span>
+                <span className="rounded-full border border-cyan-200/20 bg-cyan-200/[0.08] px-3 py-1 font-mono text-xs text-cyan-200">CGPA: {edu.cgpa}</span>
+                <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 font-mono text-xs text-slate-300">{edu.location}</span>
+              </div>
+            </div>
+          </div>
+          <div className="mt-6">
+            <div className="font-mono text-xs uppercase tracking-[0.24em] text-slate-400">Key Highlights</div>
+            <div className="mt-3 space-y-2">
+              {edu.highlights.map((h) => (
+                <div key={h} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.025] px-4 py-3">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
+                  <span className="text-sm leading-6 text-slate-300">{h}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Coursework panel */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          viewport={{ once: true }}
+          className="glass-panel rounded-[2rem] p-6"
+        >
+          <div className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-200">Relevant Coursework</div>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            {edu.coursework.map((course, i) => (
+              <motion.div
+                key={course}
+                initial={{ opacity: 0, scale: 0.92 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.04 }}
+                viewport={{ once: true }}
+                className="rounded-2xl border border-white/10 bg-white/[0.035] p-3 text-sm text-slate-300"
+              >
+                <span className="mr-2 font-mono text-[10px] text-cyan-200">{String(i + 1).padStart(2, "0")}</span>
+                {course}
+              </motion.div>
+            ))}
+          </div>
+          <div className="mt-5 rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] p-4">
+            <div className="font-mono text-xs uppercase tracking-[0.22em] text-violet-200">Program Focus</div>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              Specialized in applying artificial intelligence and data science to real-world problems — from vision systems and NLP to agentic workflows and product engineering.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Skills ───────────────────────────────────────────────────────────────────
 function SkillsSection({ data }: { data: PortfolioData }) {
   return (
     <section id="skills" className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
@@ -695,12 +796,12 @@ function SkillsSection({ data }: { data: PortfolioData }) {
         body="A dashboard view of the AI, engineering, and research capabilities behind the portfolio OS."
       />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {data.skills.map((skill, index) => (
+        {data.skills.map((skill, i) => (
           <motion.div
             key={skill.category}
             initial={{ opacity: 0, y: 22 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.04 }}
+            transition={{ delay: i * 0.04 }}
             viewport={{ once: true }}
             whileHover={{ y: -6, scale: 1.01 }}
             className="glass-panel rounded-[2rem] p-5"
@@ -732,13 +833,10 @@ function SkillsSection({ data }: { data: PortfolioData }) {
   );
 }
 
-function ProjectCard({ project, onOpen }: { project: Project; onOpen: (project: Project) => void }) {
+// ─── Projects ─────────────────────────────────────────────────────────────────
+function ProjectCard({ project, onOpen }: { project: Project; onOpen: (p: Project) => void }) {
   return (
-    <motion.article
-      layout
-      whileHover={{ y: -8 }}
-      className="group glass-panel relative overflow-hidden rounded-[2rem] p-6"
-    >
+    <motion.article layout whileHover={{ y: -8 }} className="group glass-panel relative overflow-hidden rounded-[2rem] p-6">
       <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl transition group-hover:bg-cyan-300/20" />
       <div className="relative">
         <div className="font-mono text-xs uppercase tracking-[0.24em] text-cyan-200">{project.category}</div>
@@ -749,12 +847,10 @@ function ProjectCard({ project, onOpen }: { project: Project; onOpen: (project: 
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
           {project.tech.slice(0, 5).map((tech) => (
-            <span key={tech} className="rounded-full bg-white/[0.06] px-3 py-1 text-xs text-slate-300">
-              {tech}
-            </span>
+            <span key={tech} className="rounded-full bg-white/[0.06] px-3 py-1 text-xs text-slate-300">{tech}</span>
           ))}
         </div>
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="mt-6 flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => onOpen(project)}
@@ -762,19 +858,22 @@ function ProjectCard({ project, onOpen }: { project: Project; onOpen: (project: 
           >
             Quick View
           </button>
-          <Link
-            href={`/projects/${project.slug}`}
-            className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-200/40 hover:text-white"
-          >
+          <Link href={`/projects/${project.slug}`} className="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-200/40 hover:text-white">
             Case Study
           </Link>
+          <a href={project.liveUrl} target="_blank" rel="noreferrer" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-400 transition hover:border-cyan-200/40 hover:text-cyan-200" title="Live Demo">
+            <ExternalLink className="h-4 w-4" />
+          </a>
+          <a href={project.githubUrl} target="_blank" rel="noreferrer" className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-400 transition hover:border-cyan-200/40 hover:text-cyan-200" title="GitHub">
+            <GithubIcon className="h-4 w-4" />
+          </a>
         </div>
       </div>
     </motion.article>
   );
 }
 
-function ProjectsSection({ data, onOpen }: { data: PortfolioData; onOpen: (project: Project) => void }) {
+function ProjectsSection({ data, onOpen }: { data: PortfolioData; onOpen: (p: Project) => void }) {
   return (
     <section id="projects" className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
       <SectionHeader
@@ -791,17 +890,18 @@ function ProjectsSection({ data, onOpen }: { data: PortfolioData; onOpen: (proje
   );
 }
 
+// ─── Timeline ─────────────────────────────────────────────────────────────────
 function TimelineSection({ data }: { data: PortfolioData }) {
   return (
     <section id="experience" className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
       <SectionHeader eyebrow="SYSTEM.TIMELINE" title="Experience timeline." />
       <div className="relative ml-3 border-l border-cyan-200/20 pl-8">
-        {data.experience.map((item, index) => (
+        {data.experience.map((item, i) => (
           <motion.div
             key={`${item.role}-${item.organization}`}
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.08 }}
+            transition={{ delay: i * 0.08 }}
             viewport={{ once: true }}
             className="relative mb-6 last:mb-0"
           >
@@ -825,35 +925,46 @@ function TimelineSection({ data }: { data: PortfolioData }) {
   );
 }
 
+// ─── Research ─────────────────────────────────────────────────────────────────
 function ResearchSection({ data }: { data: PortfolioData }) {
   return (
     <section id="research" className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
       <SectionHeader
         eyebrow="SYSTEM.RESEARCH"
         title="Research, achievements, and signal."
-        body="A compact evidence layer for publications, events, certifications, awards, and technical consistency."
+        body="Publications, certifications, awards, and evidence of consistent technical growth."
       />
       <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="glass-panel rounded-[2rem] p-6">
-          <div className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-200">Publication</div>
-          <h3 className="mt-4 text-3xl font-semibold text-white">Efficient Fine-tuning of Large Language Models for Domain-Specific Tasks</h3>
-          <p className="mt-4 leading-8 text-slate-300">
-            IEEE publication placeholder focused on parameter-efficient adaptation, domain grounding, and practical deployment tradeoffs for LLM systems.
-          </p>
+          <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/20 bg-cyan-200/[0.07] px-3 py-1.5 font-mono text-xs uppercase tracking-[0.22em] text-cyan-200">
+            {data.researchPaper.venue} · {data.researchPaper.year}
+          </div>
+          <h3 className="mt-5 text-3xl font-semibold leading-snug text-white">{data.researchPaper.title}</h3>
+          <p className="mt-4 leading-8 text-slate-300">{data.researchPaper.abstract}</p>
           <div className="mt-6 flex flex-wrap gap-2">
-            {data.about.researchInterests.map((item) => (
-              <span key={item} className="rounded-full border border-cyan-200/15 bg-cyan-200/[0.05] px-3 py-1 text-xs text-cyan-100">
-                {item}
+            {data.researchPaper.keywords.map((kw) => (
+              <span key={kw} className="rounded-full border border-cyan-200/15 bg-cyan-200/[0.05] px-3 py-1 text-xs text-cyan-100">
+                {kw}
               </span>
             ))}
           </div>
+          <div className="mt-6 rounded-2xl border border-violet-200/15 bg-violet-200/[0.06] p-4">
+            <div className="font-mono text-xs uppercase tracking-[0.22em] text-violet-200">Research Interests</div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {data.about.researchInterests.map((ri) => (
+                <span key={ri} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs text-slate-300">{ri}</span>
+              ))}
+            </div>
+          </div>
         </div>
+
         <div className="glass-panel rounded-[2rem] p-6">
           <div className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-200">Achievements</div>
           <div className="mt-5 space-y-3">
-            {data.achievements.map((achievement) => (
-              <div key={achievement} className="rounded-2xl border border-white/10 bg-white/[0.035] p-3 text-sm leading-6 text-slate-300">
-                {achievement}
+            {data.achievements.map((a) => (
+              <div key={a} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.035] p-3 text-sm leading-6 text-slate-300">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
+                {a}
               </div>
             ))}
           </div>
@@ -863,23 +974,32 @@ function ResearchSection({ data }: { data: PortfolioData }) {
   );
 }
 
+// ─── Coding ───────────────────────────────────────────────────────────────────
 function CodingSection({ data }: { data: PortfolioData }) {
   return (
     <section id="coding" className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
       <SectionHeader eyebrow="SYSTEM.CODING" title="Competitive coding telemetry." />
       <div className="grid gap-4 md:grid-cols-4">
-        {data.coding.map((item) => (
-          <div key={item.label} className="glass-panel rounded-[2rem] p-5">
+        {data.coding.map((item, i) => (
+          <motion.div
+            key={item.label}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07 }}
+            viewport={{ once: true }}
+            className="glass-panel rounded-[2rem] p-5"
+          >
             <div className="font-mono text-3xl font-semibold text-cyan-200">{item.value}</div>
             <div className="mt-2 text-sm uppercase tracking-[0.18em] text-white">{item.label}</div>
             <p className="mt-3 text-sm leading-6 text-slate-400">{item.detail}</p>
-          </div>
+          </motion.div>
         ))}
       </div>
     </section>
   );
 }
 
+// ─── Tech & Articles ──────────────────────────────────────────────────────────
 function TechAndArticlesSection({ data }: { data: PortfolioData }) {
   return (
     <section id="articles" className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
@@ -892,12 +1012,12 @@ function TechAndArticlesSection({ data }: { data: PortfolioData }) {
         <div className="glass-panel overflow-hidden rounded-[2rem] p-6">
           <div className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-200">Technology Orbit</div>
           <div className="mt-6 flex flex-wrap gap-2">
-            {data.techStack.map((tech, index) => (
+            {data.techStack.map((tech, i) => (
               <motion.span
                 key={tech}
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.02 }}
+                transition={{ delay: i * 0.02 }}
                 viewport={{ once: true }}
                 className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-slate-200"
               >
@@ -920,6 +1040,7 @@ function TechAndArticlesSection({ data }: { data: PortfolioData }) {
   );
 }
 
+// ─── Contact ─────────────────────────────────────────────────────────────────
 function ContactSection({ data }: { data: PortfolioData }) {
   const [form, setForm] = useState<ContactFormState>({ name: "", email: "", message: "" });
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -927,36 +1048,32 @@ function ContactSection({ data }: { data: PortfolioData }) {
   const [isPending, startTransition] = useTransition();
 
   function updateField(field: keyof ContactFormState, value: string) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((cur) => ({ ...cur, [field]: value }));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatusMessage(null);
     setStatusTone(null);
-
     startTransition(async () => {
       try {
-        const response = await fetch("/api/contact", {
+        const res = await fetch("/api/contact", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(form),
         });
-
-        const result = (await response.json()) as { error?: string; ok?: boolean };
-
-        if (!response.ok) {
+        const result = (await res.json()) as { error?: string; ok?: boolean };
+        if (!res.ok) {
           setStatusTone("error");
           setStatusMessage(result.error || "The message could not be sent.");
           return;
         }
-
         setStatusTone("success");
-        setStatusMessage("Message sent successfully. Nishanth will get it in his inbox.");
+        setStatusMessage("Message sent. Nishanth will get it in his inbox.");
         setForm({ name: "", email: "", message: "" });
       } catch {
         setStatusTone("error");
-        setStatusMessage("The message could not be sent right now. Please try again shortly.");
+        setStatusMessage("Could not send right now. Please try again shortly.");
       }
     });
   }
@@ -972,7 +1089,7 @@ function ContactSection({ data }: { data: PortfolioData }) {
         <div className="glass-panel rounded-[2rem] p-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-lime-200/20 bg-lime-200/[0.08] px-3 py-1.5 text-sm text-lime-100">
             <span className="h-2 w-2 rounded-full bg-lime-300" />
-            Available
+            Available · Open to Work
           </div>
           <h3 className="mt-6 text-4xl font-semibold tracking-tight text-white">Build something intelligent, useful, and unusually polished.</h3>
           <p className="mt-5 leading-8 text-slate-300">{data.availability}</p>
@@ -998,9 +1115,13 @@ function ContactSection({ data }: { data: PortfolioData }) {
             ))}
           </div>
           <div className="mt-6">
-            <PrimaryButton href={data.resumeUrl}>Download Resume</PrimaryButton>
+            <PrimaryButton href={data.resumeUrl}>
+              <Download className="h-4 w-4" />
+              Download Resume
+            </PrimaryButton>
           </div>
         </div>
+
         <form onSubmit={handleSubmit} className="glass-panel rounded-[2rem] p-6">
           <div className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-200">Message Uplink</div>
           <div className="mt-6 grid gap-4">
@@ -1008,7 +1129,7 @@ function ContactSection({ data }: { data: PortfolioData }) {
               Name
               <input
                 value={form.name}
-                onChange={(event) => updateField("name", event.target.value)}
+                onChange={(e) => updateField("name", e.target.value)}
                 className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white outline-none transition focus:border-cyan-200/50"
                 placeholder="Your name"
               />
@@ -1018,18 +1139,18 @@ function ContactSection({ data }: { data: PortfolioData }) {
               <input
                 type="email"
                 value={form.email}
-                onChange={(event) => updateField("email", event.target.value)}
+                onChange={(e) => updateField("email", e.target.value)}
                 className="rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white outline-none transition focus:border-cyan-200/50"
-                placeholder="you@example.com"
+                placeholder="you@company.com"
               />
             </label>
             <label className="grid gap-2 text-sm text-slate-300">
               Message
               <textarea
                 value={form.message}
-                onChange={(event) => updateField("message", event.target.value)}
+                onChange={(e) => updateField("message", e.target.value)}
                 className="min-h-36 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-white outline-none transition focus:border-cyan-200/50"
-                placeholder="Tell me about your AI idea..."
+                placeholder="Tell me about the role or your AI idea..."
               />
             </label>
             <button type="submit" disabled={isPending} className="rounded-2xl bg-cyan-300 px-5 py-3 font-semibold text-slate-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60">
@@ -1038,9 +1159,6 @@ function ContactSection({ data }: { data: PortfolioData }) {
             {statusMessage ? (
               <p className={`text-sm leading-6 ${statusTone === "success" ? "text-lime-200" : "text-rose-200"}`}>{statusMessage}</p>
             ) : null}
-            <p className="text-xs leading-6 text-slate-500">
-              This form sends through the `/api/contact` endpoint. Add your Resend environment variables before deployment.
-            </p>
           </div>
         </form>
       </div>
@@ -1048,7 +1166,15 @@ function ContactSection({ data }: { data: PortfolioData }) {
   );
 }
 
+// ─── Project Modal ────────────────────────────────────────────────────────────
 function ProjectModal({ project, onClose }: { project: Project | null; onClose: () => void }) {
+  useEffect(() => {
+    if (!project) return;
+    function handler(e: KeyboardEvent) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [project, onClose]);
+
   return (
     <AnimatePresence>
       {project ? (
@@ -1064,15 +1190,15 @@ function ProjectModal({ project, onClose }: { project: Project | null; onClose: 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.96 }}
             className="glass-panel max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[2rem] p-6"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="font-mono text-xs uppercase tracking-[0.28em] text-cyan-200">{project.category}</div>
                 <h2 className="mt-3 text-4xl font-semibold text-white">{project.title}</h2>
               </div>
-              <button type="button" onClick={onClose} className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-300 hover:text-white">
-                Close
+              <button type="button" onClick={onClose} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 text-slate-300 hover:text-white">
+                <X className="h-4 w-4" />
               </button>
             </div>
             <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -1091,12 +1217,15 @@ function ProjectModal({ project, onClose }: { project: Project | null; onClose: 
             <div className="mt-5 rounded-3xl border border-cyan-200/15 bg-cyan-200/[0.05] p-5">
               <h3 className="font-mono text-xs uppercase tracking-[0.24em] text-cyan-200">Architecture Workflow</h3>
               <div className="mt-4 flex flex-wrap gap-2">
-                {project.architecture.map((step, index) => (
+                {project.architecture.map((step, i) => (
                   <span key={step} className="rounded-full border border-white/10 bg-slate-950/50 px-3 py-1.5 text-sm text-slate-200">
-                    {index + 1}. {step}
+                    {i + 1}. {step}
                   </span>
                 ))}
               </div>
+            </div>
+            <div className="mt-5 rounded-3xl border border-lime-200/15 bg-lime-200/[0.04] p-4 font-mono text-sm text-lime-100">
+              Impact: {project.metrics}
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <GhostButton href={`/projects/${project.slug}`}>Open Full Case Study</GhostButton>
@@ -1110,10 +1239,12 @@ function ProjectModal({ project, onClose }: { project: Project | null; onClose: 
   );
 }
 
+// ─── Root Component ───────────────────────────────────────────────────────────
 export function AiOSPortfolio({ data }: { data: PortfolioData }) {
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [assistantStatus, setAssistantStatus] = useState<AssistantStatus>("idle");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   function openAssistant() {
     setAssistantOpen(true);
@@ -1122,7 +1253,10 @@ export function AiOSPortfolio({ data }: { data: PortfolioData }) {
 
   return (
     <main className="relative min-h-screen overflow-hidden">
+      <ScrollProgressBar />
       <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_50%_30%,rgba(0,231,255,0.09),transparent_36%)]" />
+
+      {/* Nav */}
       <nav className="fixed left-1/2 top-4 z-50 w-[calc(100%-2rem)] max-w-7xl -translate-x-1/2 rounded-full border border-white/10 bg-slate-950/70 px-3 py-3 backdrop-blur-2xl">
         <div className="flex items-center justify-between gap-4">
           <button type="button" onClick={() => scrollToSection("hero")} className="flex items-center gap-3 pl-2">
@@ -1131,35 +1265,37 @@ export function AiOSPortfolio({ data }: { data: PortfolioData }) {
           </button>
           <div className="hidden items-center gap-1 lg:flex">
             {navItems.map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => scrollToSection(id)}
-                className="rounded-full px-3 py-2 text-sm text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
-              >
+              <button key={id} type="button" onClick={() => scrollToSection(id)} className="rounded-full px-3 py-2 text-sm text-slate-300 transition hover:bg-white/[0.06] hover:text-white">
                 {label}
               </button>
             ))}
           </div>
-          <button
-            type="button"
-            onClick={openAssistant}
-            className="rounded-full border border-cyan-200/25 bg-cyan-200/[0.08] px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-200/15"
-          >
-            Ask ARIA
-          </button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={openAssistant} className="rounded-full border border-cyan-200/25 bg-cyan-200/[0.08] px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-200/15">
+              Ask ARIA
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen((v) => !v)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-300 transition hover:text-white lg:hidden"
+              aria-label={mobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
+            >
+              <svg viewBox="0 0 16 12" className="h-4 w-5" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <line x1="0" y1="1" x2="16" y2="1" />
+                <line x1="2" y1="6" x2="16" y2="6" />
+                <line x1="4" y1="11" x2="16" y2="11" />
+              </svg>
+            </button>
+          </div>
         </div>
       </nav>
 
+      <MobileNavOverlay open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
+
       <Hero data={data} openAssistant={openAssistant} />
-      <AssistantConsole
-        data={data}
-        status={assistantStatus}
-        setStatus={setAssistantStatus}
-        expanded={assistantOpen}
-        setExpanded={setAssistantOpen}
-      />
+      <AssistantConsole data={data} status={assistantStatus} setStatus={setAssistantStatus} expanded={assistantOpen} setExpanded={setAssistantOpen} />
       <AboutSection data={data} />
+      <EducationSection data={data} />
       <SkillsSection data={data} />
       <ProjectsSection data={data} onOpen={setSelectedProject} />
       <TimelineSection data={data} />
@@ -1168,10 +1304,26 @@ export function AiOSPortfolio({ data }: { data: PortfolioData }) {
       <TechAndArticlesSection data={data} />
       <ContactSection data={data} />
 
-      <footer className="border-t border-white/10 px-4 py-10 text-center text-sm text-slate-500">
-        <span className="font-mono uppercase tracking-[0.28em] text-cyan-200">{data.systemName}</span>
-        <span className="mx-3 text-slate-700">/</span>
-        Built with Next.js, React, Tailwind CSS, Framer Motion, and a hybrid AI assistant architecture.
+      <footer className="border-t border-white/10 px-4 py-10">
+  <div className="mx-auto max-w-7xl">
+    {/* Last Updated Banner */}
+    <div className="mb-8 rounded-2xl border border-cyan-200/15 bg-cyan-200/[0.06] p-4 text-center">
+      <p className="text-sm text-slate-400">
+        <span className="font-mono text-cyan-200">Last Updated:</span> May 2026 · Portfolio actively maintained
+      </p>
+    </div>
+
+        {/* Footer text */}
+          <div className="text-center text-sm text-slate-500">
+            <span className="font-mono uppercase tracking-[0.28em] text-cyan-200">{data.systemName}</span>
+            <span className="mx-3 text-slate-700">/</span>
+            Built with Next.js, React, Tailwind CSS, Framer Motion, and Groq AI.
+          <span className="mx-3 text-slate-700">/</span>
+            <button type="button" onClick={() => scrollToSection("hero")} className="font-mono text-xs uppercase tracking-[0.22em] text-slate-500 transition hover:text-cyan-200">
+              Back to top ↑
+            </button>
+        </div>
+        </div>
       </footer>
 
       <ListeningMicOrb visible={assistantStatus === "listening"} />

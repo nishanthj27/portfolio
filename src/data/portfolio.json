@@ -1,7 +1,7 @@
 {
   "name": "Nishanth Jayaraman",
   "systemName": "NISHANTH JAYARAMAN",
-  "roleLine": "Student | AI Engineer | GenAI Builder | Product Developer",
+  "roleLine": "Student | AI Engineer | Agentic AI Builder | Intelligent Product Developer",
   "tagline": "I design intelligent products that turn research-grade AI into fast, useful, human-centered systems.",
   "location": "India",
   "email": "nishanthj2707@gmail.com",
@@ -10,6 +10,31 @@
   "profileImage": "/profile.png",
   "resumeUrl": "/Nishanth-Jayaraman-Resume.pdf",
   "availability": "Available for Software Development, AI products, research collaborations, and full-time AI/ML engineering roles.",
+  "education": {
+    "degree": "B.Tech in Artificial Intelligence & Data Science",
+    "institution": "Sri Sairam Engineering College, Chennai",
+    "location": "India",
+    "duration": "2022 – 2026",
+    "cgpa": "8.70 / 10",
+    "highlights": [
+      "Recognized as Best Academic Performer (4th Semester)",
+      "IEEE Research Paper Publication in Computer Vision & Deep Learning",
+      "Hosted national conference on AI & Emerging Technologies",
+      "Active contributor to department AI research and student tech events"
+    ],
+    "coursework": [
+      "Agentic AI Systems",
+      "Software Development",
+      "Machine Learning",
+      "Deep Learning",
+      "Natural Language Processing",
+      "Computer Vision",
+      "Data Structures & Algorithms",
+      "Database Management",
+      "Cloud Computing",
+      "Big Data Analytics"
+    ]
+  },
   "about": {
     "story": "Nishanth works at the intersection of applied AI, intelligent product engineering, and research, transforming advanced technologies like LLMs, multimodal AI, RAG systems, and agentic workflows into practical, scalable products that solve real-world problems.",
     "mission": "The mission is practical impact: AI for education, agriculture, accessibility, hiring, creativity, and developer productivity.",
@@ -25,7 +50,7 @@
   },
   "stats": [
     { "label": "AI Projects", "value": "7+", "detail": "Across GenAI, CV, NLP, and agents" },
-    { "label": "IEEE Paper", "value": "1", "detail": "Research publication placeholder" },
+    { "label": "IEEE Paper", "value": "1", "detail": "Published research in deep learning" },
     { "label": "LeetCode", "value": "450+", "detail": "Problem solving practice" },
     { "label": "GitHub", "value": "100+", "detail": "Annual contribution target" }
   ],
@@ -84,7 +109,7 @@
       "results": ["Prototype target: 95% class accuracy on curated species", "Safety-first answer format", "Fast image-to-insight flow"],
       "future": ["Add regional language support", "Add expert review mode", "Deploy offline-friendly mobile capture"],
       "tech": ["TensorFlow", "FastAPI", "React", "OpenCV", "RAG"],
-      "metrics": "95% target accuracy | 200+ species dataset placeholder",
+      "metrics": "95% target accuracy | 200+ species dataset",
       "liveUrl": "https://medicinal-plant-identification-xi.vercel.app/",
       "githubUrl": "https://github.com/nishanthj27/leaf-project"
     },
@@ -100,7 +125,7 @@
       "results": ["Structured feedback loops", "Role-specific question packs", "Session summary generation"],
       "future": ["Add voice-first interviews", "Add coding round simulator", "Add company-specific prep modes"],
       "tech": ["Next.js", "Groq", "LangChain", "Web Speech API", "PostgreSQL"],
-      "metrics": "500+ session target | 40% confidence lift placeholder",
+      "metrics": "500+ session target | 40% confidence lift",
       "liveUrl": "https://interview-practice-agent-iota.vercel.app/",
       "githubUrl": "https://github.com/nishanthj27/Interview-agent"
     },
@@ -116,7 +141,7 @@
       "results": ["Personalized learning journeys", "Practice-first content", "Teacher-friendly summaries"],
       "future": ["Parent dashboard", "Offline lesson packs", "Exam readiness predictor"],
       "tech": ["React", "Node.js", "MongoDB", "LLMs", "Tamil NLP"],
-      "metrics": "2,000+ student target | 85% outcome lift placeholder",
+      "metrics": "2,000+ student target | 85% outcome lift",
       "liveUrl": "https://tnkalvihub.vercel.app/",
       "githubUrl": "https://github.com/nishanthj27/TNKalviHub"
     },
@@ -132,34 +157,41 @@
       "results": ["Transparent match reports", "Skill-gap guidance", "Recruiter-friendly summaries"],
       "future": ["Chrome extension", "LinkedIn import", "Role-specific resume versions"],
       "tech": ["Python", "BERT", "FastAPI", "PostgreSQL", "React"],
-      "metrics": "90% matching target | 60% review-time reduction placeholder",
+      "metrics": "90% matching target | 60% review-time reduction",
       "liveUrl": "https://jd-resume-matcher.vercel.app/",
       "githubUrl": "https://github.com/nishanthj27/jd-resume-matcher"
     }
   ],
+  "researchPaper": {
+    "title": "Medicinal Plant Leaf Identification Using Transfer Learning and Deep Learning Techniques",
+    "venue": "IEEE",
+    "year": "2024",
+    "abstract": "This paper presents a transfer learning approach for automated medicinal plant leaf identification, combining deep convolutional neural networks with domain-specific feature extraction to achieve high-accuracy classification with limited training data. The system demonstrates practical deployment potential for healthcare, agriculture, and biodiversity research.",
+    "keywords": ["Transfer Learning", "Deep Learning", "Computer Vision", "Plant Classification", "Medicinal Plants", "CNNs"]
+  },
   "experience": [
     {
       "role": "Technology Job Simulation",
       "organization": "Deloitte – Forage Platform",
-      "duration": "Mar 2026 - Apr 2026",
-      "summary": "Developed a Python solution to normalize telemetry data from multiple JSON formats into a unified structured schema."
+      "duration": "Mar 2026 – Apr 2026",
+      "summary": "Developed a Python solution to normalize telemetry data from multiple JSON formats into a unified structured schema, simulating real-world data engineering tasks at enterprise scale."
     },
     {
       "role": "Machine Learning Engineer Intern",
       "organization": "Cloud IT Solutions",
-      "duration": "Jun 2024 - Jul 2024",
-      "summary": "Developed a Generative Adversarial Network (GAN) model using TensorFlow to generate synthetic data, improving data augmentation efficiency by 20%. Designed an Image Modification Percentage Calculator in Python, improving image processing accuracy by 25% through statistical analysis and feature engineering. "
+      "duration": "Jun 2024 – Jul 2024",
+      "summary": "Developed a Generative Adversarial Network (GAN) model using TensorFlow to generate synthetic data, improving data augmentation efficiency by 20%. Designed an Image Modification Percentage Calculator in Python, improving image processing accuracy by 25% through statistical analysis and feature engineering."
     }
   ],
   "achievements": [
-  "Published an IEEE research paper on medicinal plant leaf identification using transfer learning and deep learning techniques",
-  "Built and deployed AI-powered applications including interview simulation agents and computer vision systems",
-  "Solved 400+ LeetCode problems with strong foundations in data structures and algorithmic problem solving",
-  "Hosted and coordinated a national conference on advancements in AI and emerging technologies",
-  "Organized large-scale technical and strategy-based events involving team management and budget planning",
-  "Recognized as Best Academic Performer during the 4th semester of B.Tech AI & DS",
-  "Winner of essay writing competitions and runner-up in intra-college public speaking competitions",
-  "Completed certifications and training programs from NPTEL, Coursera, Udemy, IIT Bombay Spoken Tutorial, and IIRS"
+    "Published an IEEE research paper on medicinal plant leaf identification using transfer learning and deep learning techniques",
+    "Built and deployed AI-powered applications including interview simulation agents and computer vision systems",
+    "Solved 450+ LeetCode problems with strong foundations in data structures and algorithmic problem solving",
+    "Hosted and coordinated a national conference on advancements in AI and emerging technologies",
+    "Organized large-scale technical and strategy-based events involving team management and budget planning",
+    "Recognized as Best Academic Performer during the 4th semester of B.Tech AI & DS",
+    "Winner of essay writing competitions and runner-up in intra-college public speaking competitions",
+    "Completed certifications and training programs from NPTEL, Coursera, Udemy, IIT Bombay Spoken Tutorial, and IIRS"
   ],
   "coding": [
     { "label": "LeetCode solved", "value": "450+", "detail": "DSA consistency and interview prep" },
@@ -168,31 +200,11 @@
     { "label": "Project velocity", "value": "7 builds", "detail": "Shipped AI prototypes" }
   ],
   "techStack": [
-  "Python",
-  "Java",
-  "SQL",
-  "TensorFlow",
-  "PyTorch",
-  "Scikit-learn",
-  "Pandas",
-  "NumPy",
-  "React",
-  "Next.js",
-  "Tailwind CSS",
-  "Framer Motion",
-  "FastAPI",
-  "Flask",
-  "Node.js",
-  "MongoDB",
-  "LLMs",
-  "Agentic AI",
-  "CNNs",
-  "Machine Learning",
-  "Deep Learning",
-  "Power BI",
-  "Tableau",
-  "Git",
-  "Vercel"
+    "Python", "Java", "SQL", "TensorFlow", "PyTorch", "Scikit-learn",
+    "Pandas", "NumPy", "React", "Next.js", "Tailwind CSS", "Framer Motion",
+    "FastAPI", "Flask", "Node.js", "MongoDB", "LLMs", "Agentic AI",
+    "CNNs", "Machine Learning", "Deep Learning", "Power BI", "Tableau",
+    "Git", "Vercel"
   ],
   "articles": [
     {

@@ -7,6 +7,7 @@ export type AssistantMessage = {
   id: string;
   role: "assistant" | "user";
   content: string;
+  provider?: "groq" | "static";
 };
 
 export type NavigationAction = {
@@ -16,16 +17,17 @@ export type NavigationAction = {
 };
 
 const sectionAliases: Record<string, string[]> = {
-  hero: ["home", "start", "top"],
-  assistant: ["assistant", "aria", "chat", "talk"],
-  about: ["about", "profile", "background", "story", "nishanth"],
-  skills: ["skills", "technologies", "tech", "stack", "capabilities"],
-  projects: ["projects", "builds", "work", "portfolio", "featured"],
-  experience: ["experience", "timeline", "career", "internship", "work history"],
+  hero: ["home", "start", "top", "beginning"],
+  assistant: ["assistant", "aria", "chat", "talk", "help"],
+  about: ["about", "profile", "background", "story", "nishanth", "who"],
+  education: ["education", "degree", "college", "university", "btech", "cgpa", "academic", "study"],
+  skills: ["skills", "technologies", "tech", "stack", "capabilities", "abilities"],
+  projects: ["projects", "builds", "work", "portfolio", "featured", "products"],
+  experience: ["experience", "timeline", "career", "internship", "work history", "job"],
   research: ["research", "paper", "publication", "ieee", "achievements", "awards"],
-  coding: ["coding", "leetcode", "github", "contributions", "stats"],
-  articles: ["blog", "articles", "writeups", "notes"],
-  contact: ["contact", "email", "hire", "connect", "reach"],
+  coding: ["coding", "leetcode", "github", "contributions", "stats", "dsa"],
+  articles: ["blog", "articles", "writeups", "notes", "posts"],
+  contact: ["contact", "email", "hire", "connect", "reach", "message"],
 };
 
 const projectAliases = portfolio.projects.reduce<Record<string, Project>>((acc, project) => {
@@ -47,15 +49,15 @@ export function normalizePrompt(prompt: string) {
 
 export function findNavigationAction(prompt: string): NavigationAction | null {
   const normalized = normalizePrompt(prompt);
-  const commandLike = /\b(open|show|go|navigate|scroll|take|view|launch)\b/.test(normalized);
+  const commandLike = /\b(open|show|go|navigate|scroll|take|view|launch|jump|bring)\b/.test(normalized);
 
-  if (/\bresume\b/.test(normalized)) {
-    return { type: "navigate", section: "contact", label: "Opening resume and contact console." };
+  if (/\bresume\b/.test(normalized) && commandLike) {
+    return { type: "navigate", section: "contact", label: "Opening contact console — resume download is there." };
   }
 
   for (const [section, aliases] of Object.entries(sectionAliases)) {
     if (aliases.some((alias) => normalized.includes(alias)) && commandLike) {
-      return { type: "navigate", section, label: `Opening ${section} module.` };
+      return { type: "navigate", section, label: `Navigating to ${section} module.` };
     }
   }
 
@@ -69,28 +71,31 @@ export function matchLocalIntent(prompt: string): string | null {
     if (normalized.includes(alias)) return `project:${project.slug}`;
   }
 
-  if (/\b(who|about|background|story|identity|nishanth|yourself|profile)\b/.test(normalized)) return "about";
-  if (/\b(project|built|builds|work|portfolio|featured|product)\b/.test(normalized)) return "projects";
-  if (/\b(skill|tech|stack|technology|framework|tool|know|capability)\b/.test(normalized)) return "skills";
-  if (/\b(experience|intern|career|organization|job|role)\b/.test(normalized)) return "experience";
-  if (/\b(research|ieee|paper|publication|academic)\b/.test(normalized)) return "research";
-  if (/\b(achievement|award|certification|event|hackathon)\b/.test(normalized)) return "achievements";
-  if (/\b(contact|email|linkedin|github|hire|available|reach)\b/.test(normalized)) return "contact";
-  if (/\b(leetcode|coding|contribution|consistency|problem)\b/.test(normalized)) return "coding";
-  if (/\b(blog|article|writeup|note|summary)\b/.test(normalized)) return "articles";
-  if (/\b(resume|cv)\b/.test(normalized)) return "resume";
+  if (/\b(who|about|background|story|identity|nishanth|yourself|profile|introduce)\b/.test(normalized)) return "about";
+  if (/\b(education|degree|college|university|btech|cgpa|academic|student|course|study|graduated)\b/.test(normalized)) return "education";
+  if (/\b(project|built|builds|work|portfolio|featured|product|demo|live)\b/.test(normalized)) return "projects";
+  if (/\b(skill|tech|stack|technology|framework|tool|know|capability|proficient|language|python|react)\b/.test(normalized)) return "skills";
+  if (/\b(experience|intern|career|organization|job|role|deloitte|cloud)\b/.test(normalized)) return "experience";
+  if (/\b(research|ieee|paper|publication|academic|journal)\b/.test(normalized)) return "research";
+  if (/\b(achievement|award|certification|event|hackathon|honor|recognition)\b/.test(normalized)) return "achievements";
+  if (/\b(contact|email|linkedin|github|hire|available|reach|connect)\b/.test(normalized)) return "contact";
+  if (/\b(leetcode|coding|contribution|consistency|problem|dsa|algorithm)\b/.test(normalized)) return "coding";
+  if (/\b(blog|article|writeup|note|summary|rag|agentic)\b/.test(normalized)) return "articles";
+  if (/\b(resume|cv|download)\b/.test(normalized)) return "resume";
+  if (/\b(hello|hi|hey|greet|start|what can|help me)\b/.test(normalized)) return "greeting";
 
   return null;
 }
 
 function projectReply(project: Project) {
   return [
-    `${project.title} is a ${project.category} project.`,
+    `**${project.title}** — ${project.category}`,
     project.summary,
-    `Problem: ${project.problem}`,
-    `Solution: ${project.solution}`,
-    `Stack: ${project.tech.join(", ")}.`,
-    `Impact: ${project.metrics}.`,
+    `**Problem:** ${project.problem}`,
+    `**Solution:** ${project.solution}`,
+    `**Stack:** ${project.tech.join(", ")}.`,
+    `**Impact:** ${project.metrics}.`,
+    `Live: ${project.liveUrl} | GitHub: ${project.githubUrl}`,
   ].join("\n\n");
 }
 
@@ -105,26 +110,48 @@ export function localReply(prompt: string): string | null {
   }
 
   switch (intent) {
+    case "greeting":
+      return `ARIA online. I'm the AI assistant for Nishanth's portfolio. You can ask me about his **projects**, **skills**, **education**, **research**, **experience**, or say things like "Go to projects" to navigate. What would you like to know?`;
+
     case "about":
-      return `${portfolio.name} is an ${portfolio.roleLine}. ${portfolio.about.story}\n\nResearch focus: ${portfolio.about.researchInterests.slice(0, 5).join(", ")}.`;
+      return `**${portfolio.name}** — ${portfolio.roleLine}.\n\n${portfolio.about.story}\n\n**Mindset:** ${portfolio.about.mindset}\n\n**Research focus:** ${portfolio.about.researchInterests.slice(0, 4).join(", ")}.`;
+
+    case "education":
+      return [
+        `**Education: ${portfolio.education.degree}**`,
+        `Institution: ${portfolio.education.institution}`,
+        `Duration: ${portfolio.education.duration} | CGPA: ${portfolio.education.cgpa}`,
+        `Relevant coursework: ${portfolio.education.coursework.slice(0, 6).join(", ")}.`,
+        `Key highlights: ${portfolio.education.highlights.slice(0, 3).join("; ")}.`,
+      ].join("\n\n");
+
     case "projects":
-      return `Nishanth has ${portfolio.projects.length} featured AI builds: ${portfolio.projects.map((project) => project.title).join(", ")}.\n\nAsk about any one project and I can open its case-study context.`;
+      return `Nishanth has **${portfolio.projects.length} featured AI builds**: ${portfolio.projects.map((p) => `**${p.title}** (${p.category})`).join(", ")}.\n\nAsk about any project by name and I'll open its full case study.`;
+
     case "skills":
-      return `Core capability matrix: ${portfolio.skills.map((skill) => `${skill.category} (${skill.items.slice(0, 3).join(", ")})`).join("; ")}.`;
+      return `**Core capability matrix:**\n\n${portfolio.skills.map((s) => `**${s.category}** (${s.level}%): ${s.items.slice(0, 3).join(", ")}`).join("\n")}`;
+
     case "experience":
-      return portfolio.experience.map((item) => `${item.role} at ${item.organization} (${item.duration}): ${item.summary}`).join("\n\n");
+      return portfolio.experience.map((item) => `**${item.role}** at ${item.organization} (${item.duration}):\n${item.summary}`).join("\n\n");
+
     case "research":
-      return `Research and publication module: ${portfolio.achievements[0]}. Main themes include ${portfolio.about.researchInterests.join(", ")}.`;
+      return `**IEEE Publication:** ${portfolio.researchPaper.title} (${portfolio.researchPaper.venue}, ${portfolio.researchPaper.year}).\n\n${portfolio.researchPaper.abstract}\n\n**Research interests:** ${portfolio.about.researchInterests.join(", ")}.`;
+
     case "achievements":
-      return `Highlighted achievements: ${portfolio.achievements.join("; ")}.`;
+      return `**Highlighted achievements:**\n\n${portfolio.achievements.map((a, i) => `${i + 1}. ${a}`).join("\n")}`;
+
     case "contact":
-      return `${portfolio.availability}\n\nEmail: ${portfolio.email}\nLinkedIn: ${portfolio.linkedin}\nGitHub: ${portfolio.github}`;
+      return `${portfolio.availability}\n\n**Email:** ${portfolio.email}\n**LinkedIn:** ${portfolio.linkedin}\n**GitHub:** ${portfolio.github}\n\nOr use the contact form in the Contact section to send a message directly.`;
+
     case "coding":
-      return `Coding signal: ${portfolio.coding.map((item) => `${item.label}: ${item.value}`).join("; ")}.`;
+      return `**Coding signal:**\n\n${portfolio.coding.map((item) => `**${item.label}:** ${item.value} — ${item.detail}`).join("\n")}`;
+
     case "articles":
-      return `Article console: ${portfolio.articles.map((item) => `${item.title} (${item.type})`).join("; ")}.`;
+      return `**Field notes and articles:**\n\n${portfolio.articles.map((a) => `**${a.title}** (${a.type}) — ${a.summary}`).join("\n\n")}`;
+
     case "resume":
-      return `Resume module is linked from the contact console. If the resume file is added at ${portfolio.resumeUrl}, the button will download it directly.`;
+      return `The resume is available for download from the **Contact** section, or directly at \`${portfolio.resumeUrl}\`. Navigate there and hit the Download button.`;
+
     default:
       return null;
   }
@@ -139,18 +166,23 @@ export function buildStaticContext() {
         tagline: portfolio.tagline,
         availability: portfolio.availability,
       },
+      education: portfolio.education,
       about: portfolio.about,
-      projects: portfolio.projects.map(({ title, category, summary, tech, metrics }) => ({
+      researchPaper: portfolio.researchPaper,
+      projects: portfolio.projects.map(({ title, category, summary, tech, metrics, liveUrl, githubUrl }) => ({
         title,
         category,
         summary,
         tech,
         metrics,
+        liveUrl,
+        githubUrl,
       })),
       skills: portfolio.skills,
       experience: portfolio.experience,
       achievements: portfolio.achievements,
       coding: portfolio.coding,
+      articles: portfolio.articles,
       contact: {
         email: portfolio.email,
         linkedin: portfolio.linkedin,
