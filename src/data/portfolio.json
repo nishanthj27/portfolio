@@ -1,0 +1,214 @@
+{
+  "name": "Nishanth Jayaraman",
+  "systemName": "NISHANTH JAYARAMAN",
+  "roleLine": "Student | AI Engineer | GenAI Builder | Product Developer",
+  "tagline": "I design intelligent products that turn research-grade AI into fast, useful, human-centered systems.",
+  "location": "India",
+  "email": "nishanthj2707@gmail.com",
+  "linkedin": "https://www.linkedin.com/in/nishanth-jayaraman",
+  "github": "https://github.com/nishanthj27",
+  "profileImage": "/profile.png",
+  "resumeUrl": "/Nishanth-Jayaraman-Resume.pdf",
+  "availability": "Available for Software Development, AI products, research collaborations, and full-time AI/ML engineering roles.",
+  "about": {
+    "story": "Nishanth works at the intersection of applied AI, intelligent product engineering, and research, transforming advanced technologies like LLMs, multimodal AI, RAG systems, and agentic workflows into practical, scalable products that solve real-world problems.",
+    "mission": "The mission is practical impact: AI for education, agriculture, accessibility, hiring, creativity, and developer productivity.",
+    "researchInterests": [
+      "Efficient LLM fine-tuning",
+      "Agentic AI systems",
+      "Multimodal reasoning",
+      "RAG evaluation",
+      "AI for social good",
+      "Edge AI deployment"
+    ],
+    "mindset": "Ship fast, measure honestly, learn faster, and keep the human in the loop."
+  },
+  "stats": [
+    { "label": "AI Projects", "value": "7+", "detail": "Across GenAI, CV, NLP, and agents" },
+    { "label": "IEEE Paper", "value": "1", "detail": "Research publication placeholder" },
+    { "label": "LeetCode", "value": "450+", "detail": "Problem solving practice" },
+    { "label": "GitHub", "value": "100+", "detail": "Annual contribution target" }
+  ],
+  "skills": [
+    {
+      "category": "Machine Learning",
+      "level": 92,
+      "items": ["Supervised learning", "Unsupervised learning", "Feature engineering", "Model evaluation", "MLOps basics"]
+    },
+    {
+      "category": "Deep Learning",
+      "level": 88,
+      "items": ["CNNs", "RNNs", "Transformers", "Diffusion models", "TensorFlow", "PyTorch"]
+    },
+    {
+      "category": "Generative AI",
+      "level": 94,
+      "items": ["LLMs", "Prompt systems", "RAG", "Fine-tuning", "Stable Diffusion", "Evaluation"]
+    },
+    {
+      "category": "Agentic AI",
+      "level": 86,
+      "items": ["Tool use", "Planning loops", "LangChain", "LangGraph", "Multi-agent workflows"]
+    },
+    {
+      "category": "Frontend Development",
+      "level": 84,
+      "items": ["React", "Next.js", "TypeScript", "Tailwind CSS", "Framer Motion"]
+    },
+    {
+      "category": "Backend Development",
+      "level": 82,
+      "items": ["FastAPI", "Node.js", "REST APIs", "MongoDB", "PostgreSQL", "Auth flows"]
+    },
+    {
+      "category": "APIs and Deployment",
+      "level": 80,
+      "items": ["Vercel", "Docker", "Groq", "OpenRouter", "Cloud APIs", "CI/CD"]
+    },
+    {
+      "category": "Research",
+      "level": 78,
+      "items": ["IEEE writing", "Experiment design", "Literature review", "Technical documentation"]
+    }
+  ],
+  "projects": [
+    {
+      "slug": "herbica-ai",
+      "title": "Herbica AI",
+      "category": "Computer Vision + NLP",
+      "summary": "An AI assistant for medicinal plant identification that explains properties, safety notes, and usage guidance from an image-first workflow.",
+      "problem": "Medicinal plant information is fragmented, hard to verify, and often inaccessible for everyday users.",
+      "solution": "A multimodal pipeline classifies plant images, retrieves structured herbal knowledge, and produces concise guidance with safety disclaimers.",
+      "architecture": ["Image upload", "Vision classification", "Knowledge retrieval", "LLM response layer", "Safety filter", "User-facing report"],
+      "challenges": ["Handling visually similar species", "Avoiding medical overclaims", "Designing low-latency inference", "Making outputs understandable"],
+      "results": ["Prototype target: 95% class accuracy on curated species", "Safety-first answer format", "Fast image-to-insight flow"],
+      "future": ["Add regional language support", "Add expert review mode", "Deploy offline-friendly mobile capture"],
+      "tech": ["TensorFlow", "FastAPI", "React", "OpenCV", "RAG"],
+      "metrics": "95% target accuracy | 200+ species dataset placeholder",
+      "liveUrl": "https://medicinal-plant-identification-xi.vercel.app/",
+      "githubUrl": "https://github.com/nishanthj27/leaf-project"
+    },
+    {
+      "slug": "ai-interview-practice-partner",
+      "title": "AI Interview Practice Partner",
+      "category": "Agentic AI",
+      "summary": "A conversational mock interview system that adapts question difficulty, scores answers, and generates improvement roadmaps.",
+      "problem": "Interview preparation is often passive, generic, and disconnected from real-time feedback.",
+      "solution": "An AI interviewer conducts role-specific sessions, evaluates answers against rubrics, and recommends focused practice loops.",
+      "architecture": ["Role intake", "Adaptive question agent", "Answer evaluation", "Feedback synthesis", "Progress memory"],
+      "challenges": ["Reducing hallucinated feedback", "Keeping sessions natural", "Balancing coaching with scoring"],
+      "results": ["Structured feedback loops", "Role-specific question packs", "Session summary generation"],
+      "future": ["Add voice-first interviews", "Add coding round simulator", "Add company-specific prep modes"],
+      "tech": ["Next.js", "Groq", "LangChain", "Web Speech API", "PostgreSQL"],
+      "metrics": "500+ session target | 40% confidence lift placeholder",
+      "liveUrl": "https://interview-practice-agent-iota.vercel.app/",
+      "githubUrl": "https://github.com/nishanthj27/Interview-agent"
+    },
+    {
+      "slug": "tn-kalvi-hub",
+      "title": "TN Kalvi Hub",
+      "category": "EdTech AI",
+      "summary": "A learning hub for Tamil Nadu students with personalized study paths, bilingual explanations, and curriculum-aware AI support.",
+      "problem": "Students need affordable, localized, and curriculum-aligned support outside the classroom.",
+      "solution": "A GenAI learning layer produces Tamil and English explanations, quizzes, and revision paths matched to syllabus goals.",
+      "architecture": ["Syllabus graph", "Student profile", "Content generator", "Quiz engine", "Progress dashboard"],
+      "challenges": ["Maintaining curriculum accuracy", "Supporting bilingual content", "Preventing over-reliance on generated answers"],
+      "results": ["Personalized learning journeys", "Practice-first content", "Teacher-friendly summaries"],
+      "future": ["Parent dashboard", "Offline lesson packs", "Exam readiness predictor"],
+      "tech": ["React", "Node.js", "MongoDB", "LLMs", "Tamil NLP"],
+      "metrics": "2,000+ student target | 85% outcome lift placeholder",
+      "liveUrl": "https://tnkalvihub.vercel.app/",
+      "githubUrl": "https://github.com/nishanthj27/TNKalviHub"
+    },
+    {
+      "slug": "resume-jd-matcher",
+      "title": "Resume-JD Matcher",
+      "category": "NLP",
+      "summary": "An ATS-style semantic matcher that compares resumes to job descriptions and explains gaps with improvement suggestions.",
+      "problem": "Candidates struggle to understand how their resume maps to a specific role beyond keyword matching.",
+      "solution": "A semantic matching engine scores fit, identifies missing skills, and produces targeted rewrite guidance.",
+      "architecture": ["Resume parser", "JD parser", "Embedding similarity", "Gap analysis", "Rewrite assistant"],
+      "challenges": ["Parsing messy resumes", "Avoiding shallow keyword bias", "Explaining scores clearly"],
+      "results": ["Transparent match reports", "Skill-gap guidance", "Recruiter-friendly summaries"],
+      "future": ["Chrome extension", "LinkedIn import", "Role-specific resume versions"],
+      "tech": ["Python", "BERT", "FastAPI", "PostgreSQL", "React"],
+      "metrics": "90% matching target | 60% review-time reduction placeholder",
+      "liveUrl": "https://jd-resume-matcher.vercel.app/",
+      "githubUrl": "https://github.com/nishanthj27/jd-resume-matcher"
+    }
+  ],
+  "experience": [
+    {
+      "role": "Technology Job Simulation",
+      "organization": "Deloitte – Forage Platform",
+      "duration": "Mar 2026 - Apr 2026",
+      "summary": "Developed a Python solution to normalize telemetry data from multiple JSON formats into a unified structured schema."
+    },
+    {
+      "role": "Machine Learning Engineer Intern",
+      "organization": "Cloud IT Solutions",
+      "duration": "Jun 2024 - Jul 2024",
+      "summary": "Developed a Generative Adversarial Network (GAN) model using TensorFlow to generate synthetic data, improving data augmentation efficiency by 20%. Designed an Image Modification Percentage Calculator in Python, improving image processing accuracy by 25% through statistical analysis and feature engineering. "
+    }
+  ],
+  "achievements": [
+  "Published an IEEE research paper on medicinal plant leaf identification using transfer learning and deep learning techniques",
+  "Built and deployed AI-powered applications including interview simulation agents and computer vision systems",
+  "Solved 400+ LeetCode problems with strong foundations in data structures and algorithmic problem solving",
+  "Hosted and coordinated a national conference on advancements in AI and emerging technologies",
+  "Organized large-scale technical and strategy-based events involving team management and budget planning",
+  "Recognized as Best Academic Performer during the 4th semester of B.Tech AI & DS",
+  "Winner of essay writing competitions and runner-up in intra-college public speaking competitions",
+  "Completed certifications and training programs from NPTEL, Coursera, Udemy, IIT Bombay Spoken Tutorial, and IIRS"
+  ],
+  "coding": [
+    { "label": "LeetCode solved", "value": "450+", "detail": "DSA consistency and interview prep" },
+    { "label": "GitHub contributions", "value": "100+", "detail": "Public build habit" },
+    { "label": "Coding streak", "value": "90 days", "detail": "Daily problem-solving loop" },
+    { "label": "Project velocity", "value": "7 builds", "detail": "Shipped AI prototypes" }
+  ],
+  "techStack": [
+  "Python",
+  "Java",
+  "SQL",
+  "TensorFlow",
+  "PyTorch",
+  "Scikit-learn",
+  "Pandas",
+  "NumPy",
+  "React",
+  "Next.js",
+  "Tailwind CSS",
+  "Framer Motion",
+  "FastAPI",
+  "Flask",
+  "Node.js",
+  "MongoDB",
+  "LLMs",
+  "Agentic AI",
+  "CNNs",
+  "Machine Learning",
+  "Deep Learning",
+  "Power BI",
+  "Tableau",
+  "Git",
+  "Vercel"
+  ],
+  "articles": [
+    {
+      "title": "How I Think About RAG Evaluation",
+      "type": "Learning Note",
+      "summary": "A practical checklist for measuring retrieval quality, answer faithfulness, and user trust."
+    },
+    {
+      "title": "Building Herbica AI",
+      "type": "Project Writeup",
+      "summary": "Design notes on multimodal plant identification, safety constraints, and AI UX."
+    },
+    {
+      "title": "Agentic AI Without the Hype",
+      "type": "AI Blog",
+      "summary": "A grounded view of tool use, planning, memory, and where agents become useful."
+    }
+  ]
+}
