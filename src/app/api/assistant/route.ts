@@ -75,7 +75,7 @@ async function askGroq(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: process.env.GROQ_MODEL || "llama-3.1-8b-instant",
+      model: process.env.GROQ_MODEL || "gpt-oss-20b",
       temperature: 0.3,
       max_tokens: 480,
       messages,
